@@ -1,10 +1,11 @@
 // App module build configuration for PhairPlay.
 //
-// Two product flavors are defined from the start:
+// Three product flavors are defined:
 //   - "googletv": targets Google TV / Android TV (minSdk 29)
 //   - "firetv":   targets Amazon Fire TV (minSdk 25)
+//   - "phone":    targets regular phones / tablets (minSdk 26)
 //
-// Shared code lives in src/main/. Flavor-specific overrides in src/googletv/ and src/firetv/.
+// Shared code lives in src/main/. Flavor-specific overrides in src/googletv/, src/firetv/, src/phone/.
 
 plugins {
     alias(libs.plugins.android.application)
@@ -66,6 +67,17 @@ android {
             minSdk = 25        // Fire TV supports Android 7.1+
             versionNameSuffix = "-firetv"
         }
+        // Phone / tablet build: a real handset app (its own applicationId so it
+        // coexists with the TV builds). No Google Cast dependency — like firetv it
+        // ships a disabled Cast stub. The activity orientation follows the mirrored
+        // source (a portrait iPhone mirror rotates the phone to portrait); this is
+        // gated by the flavor resource bool R.bool.follow_source_orientation.
+        create("phone") {
+            dimension = "platform"
+            applicationId = "com.phairplay.phone"
+            minSdk = 26        // modern phones/tablets (Android 8+)
+            versionNameSuffix = "-phone"
+        }
     }
 
     // Release signing: credentials are injected via environment variables in CI.
@@ -124,6 +136,10 @@ android {
         getByName("firetv") {
             kotlin.srcDirs("src/firetv/kotlin")
             res.srcDirs("src/firetv/res")
+        }
+        getByName("phone") {
+            kotlin.srcDirs("src/phone/kotlin")
+            res.srcDirs("src/phone/res")
         }
         getByName("test") {
             kotlin.srcDirs("src/test/kotlin")

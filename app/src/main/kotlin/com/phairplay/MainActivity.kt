@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -94,6 +95,12 @@ class MainActivity : AppCompatActivity() {
     // Currently selected nav item index (0 = Home, 1 = Settings)
     private var selectedNavIndex = 0
 
+    // Phone flavor only: rotate the Activity to match the mirrored source's orientation.
+    // False on TV flavors, which stay locked to landscape (see R.bool.follow_source_orientation).
+    private val followSourceOrientation: Boolean by lazy {
+        resources.getBoolean(R.bool.follow_source_orientation)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -169,6 +176,19 @@ class MainActivity : AppCompatActivity() {
         streamingContainer.addView(photoScreen)
         streamingContainer.addView(nowPlayingScreen)
         streamingContainer.addView(pinScreen)
+
+        // Phone flavor: rotate to match the mirrored iPhone/Mac. A portrait mirror
+        // (source taller than wide) makes the receiver portrait; a landscape mirror
+        // makes it landscape. TV flavors leave this listener null and stay landscape.
+        if (followSourceOrientation) {
+            streamingScreen.onSourceOrientationChanged = { portrait ->
+                requestedOrientation = if (portrait) {
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+            }
+        }
         photoScreen.visibility = View.GONE
         nowPlayingScreen.visibility = View.GONE
         pinScreen.visibility = View.GONE
@@ -277,6 +297,12 @@ class MainActivity : AppCompatActivity() {
         pinScreen.visibility = View.GONE
         streamingScreen.visibility = View.VISIBLE
         streamingContainer.visibility = View.GONE
+
+        // Phone flavor: the mirror ended — return the app UI to its landscape default
+        // (activity_main is a landscape nav layout). No-op on TV flavors.
+        if (followSourceOrientation) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
     }
 
     /** Returns the SurfaceView Surface for the VideoDecoder. */

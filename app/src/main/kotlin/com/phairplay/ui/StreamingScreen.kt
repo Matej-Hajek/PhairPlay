@@ -63,9 +63,20 @@ class StreamingScreen @JvmOverloads constructor(
     private var lastSurfaceW = Int.MIN_VALUE
     private var lastSurfaceH = Int.MIN_VALUE
 
+    /**
+     * Invoked (on the main thread) when the mirrored source flips between portrait and landscape.
+     * The phone flavor uses this to rotate the Activity so a portrait iPhone mirror is shown
+     * portrait. Null on TV flavors, which stay locked to landscape. [portrait] is true when the
+     * source video is taller than it is wide.
+     */
+    var onSourceOrientationChanged: ((portrait: Boolean) -> Unit)? = null
+    // Last reported source orientation; null while no stream/size is known, so a new stream re-fires.
+    private var lastPortrait: Boolean? = null
+
     private val handler = Handler(Looper.getMainLooper())
     private val tick = object : Runnable {
         override fun run() {
+            updateSourceOrientation()
             applyAspectFit()
             if (StreamStats.overlayEnabled) {
                 debugView.visibility = VISIBLE
@@ -151,6 +162,27 @@ class StreamingScreen @JvmOverloads constructor(
         lastSurfaceH = targetH
         surfaceView.layoutParams = (surfaceView.layoutParams as LayoutParams).apply {
             width = targetW; height = targetH; gravity = Gravity.CENTER
+        }
+    }
+
+    /**
+     * Detects portrait/landscape flips of the mirrored source and notifies
+     * [onSourceOrientationChanged]. Reads the same authoritative dimensions as the
+     * aspect-fit (StreamStats, refined from the decoder's crop rectangle). While no
+     * stream is active the size resets to 0, which clears the tracker so the next
+     * stream re-applies its orientation even if it matches the previous one.
+     */
+    private fun updateSourceOrientation() {
+        val vw = StreamStats.videoWidth
+        val vh = StreamStats.videoHeight
+        if (vw <= 0 || vh <= 0) {
+            lastPortrait = null
+            return
+        }
+        val portrait = vh > vw
+        if (portrait != lastPortrait) {
+            lastPortrait = portrait
+            onSourceOrientationChanged?.invoke(portrait)
         }
     }
 

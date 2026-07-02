@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Flavor-tunable configuration flags.
+
+    follow_source_orientation: when true, MainActivity rotates to match the
+    mirrored source's orientation (a portrait iPhone mirror makes the receiver
+    portrait, a landscape mirror makes it landscape). TV flavors keep this false
+    and stay locked to landscape as declared in the manifest. The phone flavor
+    overrides this to true in src/phone/res/values/config.xml.
+-->
+<resources>
+    <bool name="follow_source_orientation">false</bool>
+</resources>

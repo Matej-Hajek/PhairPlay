@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone flavor: rotate the receiver to match the mirrored source orientation.
+    See src/main/res/values/config.xml for the flag's meaning.
+-->
+<resources>
+    <bool name="follow_source_orientation">true</bool>
+</resources>
