@@ -1,0 +1,91 @@
+# Release Phone APK — builds the phone flavor and publishes it as a GitHub Release.
+#
+# Triggers:
+#   - Pushing a tag like v1.0.0-phone  → builds and attaches the APK to a release for that tag.
+#   - Manual "Run workflow" (workflow_dispatch) → builds and publishes under the tag you type.
+#
+# The APK is debug-signed (installable via `adb install`). To ship a release-signed
+# build instead, add KEYSTORE_* secrets and switch the assemble task to
+# assemblePhoneRelease with a signing step.
+
+name: Release Phone APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag/version (e.g. v1.0.0-phone)'
+        required: true
+        default: 'v1.0.0-phone'
+
+permissions:
+  contents: write   # needed to create the release and upload the APK
+
+jobs:
+  build-and-release:
+    name: Build phone APK and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant Gradle wrapper execute permission
+        run: chmod +x gradlew
+
+      # Accepts SDK licenses so AGP can auto-download the pinned NDK (28.2.x) and
+      # CMake (3.22.1) that the native libplayfair build needs.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0'
+
+      - name: Write local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build phone debug APK
+        run: ./gradlew :app:assemblePhoneDebug --stacktrace
+
+      - name: Stage & rename APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/phone/debug/app-phone-debug.apk \
+             "dist/PhairPlay-${{ steps.tag.outputs.name }}-phone.apk"
+          ls -l dist/
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: PhairPlay ${{ steps.tag.outputs.name }} (phone)
+          prerelease: true
+          fail_on_unmatched_files: true
+          body: |
+            Automated build of the PhairPlay **phone** flavor (`com.phairplay.phone`).
+
+            - Installs as a normal Android phone / tablet app (Android 8+)
+            - Launches in portrait; while mirroring it rotates to match the sending iPhone / Mac
+            - Debug-signed APK — install with:
+              ```
+              adb install -r PhairPlay-${{ steps.tag.outputs.name }}-phone.apk
+              ```
+          files: dist/PhairPlay-${{ steps.tag.outputs.name }}-phone.apk
