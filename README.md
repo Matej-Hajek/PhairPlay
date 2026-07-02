@@ -1,6 +1,6 @@
 # PhairPlay
 
-PhairPlay is a free, open-source, ad-free AirPlay 2 receiver for Android TV and Fire TV. It lets your macOS or iOS/iPadOS device mirror its screen and audio directly to your TV — no Apple TV required.
+PhairPlay is a free, open-source, ad-free AirPlay 2 receiver for Android TV, Fire TV, and Android phones/tablets. It lets your macOS or iOS/iPadOS device mirror its screen and audio directly to the receiver — no Apple TV required.
 
 ```
  macOS (Monterey+)            Android TV / Fire TV
@@ -41,8 +41,9 @@ Miracast and Google Cast receiver stacks are in progress (control-plane implemen
 
 ### App & Platform
 - Android TV / Fire TV app shell with foreground service and status UI
+- **Phone / tablet flavor** — installs as a normal handset app (launcher icon), launches in portrait, and adapts its UI to portrait and landscape
 - Mirror audio toggle and PIN-auth toggle in Settings
-- Works on Google TV (Android 10+) and Fire TV (Android 7+)
+- Works on Google TV (Android 10+), Fire TV (Android 7+), and phones/tablets (Android 8+)
 - Miracast Wi-Fi Direct / WFD advertisement and RTSP control-plane
 - Google TV Cast Connect SDK lifecycle (full testing requires Cast app ID)
 - Zero ads, zero analytics, zero internet required
@@ -86,6 +87,7 @@ Go to the [Releases page](https://github.com/mazer666/PhairPlay/releases) and do
 |-----|--------|
 | `PhairPlay-vX.Y.Z-googletv.apk` | Google TV, Android TV (Android 10+) |
 | `PhairPlay-vX.Y.Z-firetv.apk` | Amazon Fire TV (Android 7.1+) |
+| `PhairPlay-vX.Y.Z-phone.apk` | Android phones / tablets (Android 8+) |
 
 Then install it via ADB (see the Sideloading Guide below) or a sideloading app like *Downloader* on Fire TV.
 
@@ -113,8 +115,12 @@ Then install it via ADB (see the Sideloading Guide below) or a sideloading app l
 
    # For Fire TV:
    ./gradlew assembleFiretvDebug
+
+   # For Android phones / tablets:
+   ./gradlew assemblePhoneDebug
    ```
-   The APK will be in `app/build/outputs/apk/`.
+   The APK will be in `app/build/outputs/apk/` (e.g. the phone build lands in
+   `app/build/outputs/apk/phone/debug/app-phone-debug.apk`).
 
    To run the same local checks used by CI before testing on a TV:
    ```bash
@@ -164,6 +170,27 @@ Then install it via ADB (see the Sideloading Guide below) or a sideloading app l
    adb install app-firetv-debug.apk
    ```
 5. Launch PhairPlay from **Apps → Your Apps & Games**.
+
+### Android phone / tablet
+
+The `phone` flavor (`com.phairplay.phone`) installs like any normal app.
+
+1. On the phone, enable **Settings → About phone → tap Build number 7×**, then
+   **Settings → Developer options → USB debugging**.
+2. Connect the phone by USB (or `adb connect <PHONE-IP>` over Wi-Fi) and run:
+   ```bash
+   adb install -r app/build/outputs/apk/phone/debug/app-phone-debug.apk
+   ```
+3. Launch **PhairPlay** from the app drawer. It opens in portrait and advertises
+   itself over AirPlay under the phone's name.
+4. On your Mac/iPhone, open **Screen Mirroring** and pick the phone.
+
+Notes for the phone flavor:
+- **Orientation** — the app launches in portrait; while mirroring it rotates to
+  match the sender (a portrait iPhone mirror shows portrait, a landscape one
+  shows landscape).
+- It coexists with the TV builds (different application IDs), and does **not**
+  include the Google Cast receiver.
 
 ---
 
