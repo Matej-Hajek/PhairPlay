@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone flavor string overrides.
+    Only strings that differ from the main flavor need to be listed here.
+-->
+<resources>
+    <!-- Name shown in the AirPlay picker on the sending iPhone / Mac -->
+    <string name="app_name">PhairPlay</string>
+</resources>

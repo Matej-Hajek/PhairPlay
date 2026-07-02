@@ -4,7 +4,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -94,8 +96,27 @@ class MainActivity : AppCompatActivity() {
     // Currently selected nav item index (0 = Home, 1 = Settings)
     private var selectedNavIndex = 0
 
+    // Phone flavor only: rotate the Activity to match the mirrored source's orientation.
+    // False on TV flavors, which stay locked to landscape (see R.bool.follow_source_orientation).
+    private val followSourceOrientation: Boolean by lazy {
+        resources.getBoolean(R.bool.follow_source_orientation)
+    }
+
+    // Orientation the current layout was inflated for; used to reload the portrait/landscape
+    // layout when the phone is rotated while idle (see onConfigurationChanged).
+    private var lastConfigOrientation = Configuration.ORIENTATION_UNDEFINED
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Phone flavor: the app launches in portrait (also declared in the phone manifest).
+        // A mirror later pins the orientation to its source (a landscape iPhone mirror rotates
+        // to landscape); on TV this stays landscape as declared in the shared manifest.
+        if (followSourceOrientation) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+        lastConfigOrientation = resources.configuration.orientation
+
         setContentView(R.layout.activity_main)
 
         Timber.d("MainActivity created")
@@ -169,6 +190,19 @@ class MainActivity : AppCompatActivity() {
         streamingContainer.addView(photoScreen)
         streamingContainer.addView(nowPlayingScreen)
         streamingContainer.addView(pinScreen)
+
+        // Phone flavor: rotate to match the mirrored iPhone/Mac. A portrait mirror
+        // (source taller than wide) makes the receiver portrait; a landscape mirror
+        // makes it landscape. TV flavors leave this listener null and stay landscape.
+        if (followSourceOrientation) {
+            streamingScreen.onSourceOrientationChanged = { portrait ->
+                requestedOrientation = if (portrait) {
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+            }
+        }
         photoScreen.visibility = View.GONE
         nowPlayingScreen.visibility = View.GONE
         pinScreen.visibility = View.GONE
@@ -277,6 +311,33 @@ class MainActivity : AppCompatActivity() {
         pinScreen.visibility = View.GONE
         streamingScreen.visibility = View.VISIBLE
         streamingContainer.visibility = View.GONE
+
+        // Phone flavor: the mirror ended — return the idle UI to portrait (the app's default
+        // on a phone). onConfigurationChanged reloads the portrait layout if needed.
+        if (followSourceOrientation) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+    }
+
+    /**
+     * Phone flavor only: reload the orientation-specific layout when the effective orientation
+     * changes while idle — chiefly to restore the clean portrait layout after a landscape mirror
+     * ends. Orientation stays in configChanges so an active mirror is never torn down by a
+     * rotation, so we swap the layout ourselves — but only when idle. During mirroring the
+     * full-screen overlay covers the nav UI and the session must be preserved, so we do not
+     * recreate.
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!followSourceOrientation) return
+        if (newConfig.orientation == lastConfigOrientation) return
+        lastConfigOrientation = newConfig.orientation
+        val idle = !::streamingContainer.isInitialized ||
+            streamingContainer.visibility != View.VISIBLE
+        if (idle) {
+            Timber.d("Rotation while idle — reloading layout for orientation ${newConfig.orientation}")
+            recreate()
+        }
     }
 
     /** Returns the SurfaceView Surface for the VideoDecoder. */

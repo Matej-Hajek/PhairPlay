@@ -45,8 +45,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
-        Declare this app as a TV app (leanback).
-        Required for the app to appear in the TV launcher.
+        Declare leanback support so the app appears in the TV launcher, but keep
+        it OPTIONAL so PhairPlay also installs and runs on phones/tablets that do
+        not have the leanback feature. TV flavors that require leanback (googletv)
+        override this back to required="true" in their own manifest.
         uses-feature android.hardware.touchscreen is set to NOT required
         because TV remotes are used, not touch screens.
     -->
@@ -55,7 +57,7 @@
         android:required="false" />
     <uses-feature
         android:name="android.software.leanback"
-        android:required="true" />
+        android:required="false" />
     <uses-feature
         android:name="android.hardware.wifi"
         android:required="false" />
@@ -94,10 +96,16 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.PhairPlay.Fullscreen">
 
-            <!-- Makes the app launchable from the TV home screen -->
+            <!--
+                Makes the app launchable both from the TV home screen
+                (LEANBACK_LAUNCHER) and from a regular phone/tablet launcher
+                (LAUNCHER). Without the LAUNCHER category the app installs on a
+                phone but shows no icon in the app drawer.
+            -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 

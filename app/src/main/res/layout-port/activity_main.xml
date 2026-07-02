@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    layout-port/activity_main.xml — Portrait variant of MainActivity's root layout.
+
+    On a phone held upright the TV-style left navigation rail would waste a whole
+    column, so in portrait the navigation becomes a top bar and the fragment content
+    fills the rest of the screen:
+
+    ┌──────────────────────────────────────────┐
+    │  PhairPlay        Home   Settings         │  ← nav bar (horizontal)
+    ├──────────────────────────────────────────┤
+    │                                          │
+    │            CONTENT AREA                   │
+    │          (fragment container)             │
+    │                                          │
+    └──────────────────────────────────────────┘
+
+    The landscape / TV variant (res/layout/activity_main.xml) keeps the left rail.
+    View IDs are identical in both layouts so MainActivity works with either one.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <!-- ── Top navigation bar ─────────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/nav_panel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/nav_panel_background"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- App name header -->
+        <TextView
+            android:id="@+id/nav_app_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/app_name"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:fontFamily="sans-serif-medium" />
+
+        <!-- Home nav item -->
+        <TextView
+            android:id="@+id/nav_item_home"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:text="@string/nav_home"
+            android:textSize="18sp"
+            android:textColor="@color/nav_item_normal"
+            android:background="@drawable/nav_item_selector"
+            android:focusable="true"
+            android:nextFocusRight="@id/nav_item_settings"
+            android:nextFocusDown="@id/content_container" />
+
+        <!-- Settings nav item -->
+        <TextView
+            android:id="@+id/nav_item_settings"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:text="@string/nav_settings"
+            android:textSize="18sp"
+            android:textColor="@color/nav_item_normal"
+            android:background="@drawable/nav_item_selector"
+            android:focusable="true"
+            android:nextFocusLeft="@id/nav_item_home"
+            android:nextFocusDown="@id/content_container" />
+
+    </LinearLayout>
+
+    <!-- Horizontal divider between nav bar and content -->
+    <View
+        android:id="@+id/nav_divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/divider"
+        app:layout_constraintTop_toBottomOf="@id/nav_panel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ── Main content area (fragments swap here) ────────────────────── -->
+    <FrameLayout
+        android:id="@+id/content_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/nav_divider"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ── Full-screen streaming overlay (GONE when idle) ─────────────── -->
+    <FrameLayout
+        android:id="@+id/streaming_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
