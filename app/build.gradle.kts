@@ -185,7 +185,20 @@ android {
             // source (a portrait iPhone mirror shows portrait, a landscape one
             // landscape). This is a deliberate product decision for a phone
             // receiver, so setRequestedOrientation locking is expected here.
-            "SourceLockedOrientationActivity"
+            // SourceLockedOrientationActivity = code (setRequestedOrientation);
+            // LockedOrientationActivity = the phone manifest's screenOrientation.
+            "SourceLockedOrientationActivity",
+            "LockedOrientationActivity",
+            // TV-app / TV-hardware compatibility lint checks that do not apply to a
+            // phone-focused fork. The phone flavor is a normal handset app: it does
+            // not need a LEANBACK_LAUNCHER filter, a TV banner, or touchscreen/feature
+            // declarations aimed at making the app installable on TVs.
+            "MissingLeanbackLauncher",
+            "MissingLeanbackSupport",
+            "MissingTvBanner",
+            "ImpliedTouchscreenHardware",
+            "PermissionImpliesUnsupportedHardware",
+            "UnsupportedTvHardware"
         )
     }
 
