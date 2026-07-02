@@ -1,6 +1,11 @@
-# PhairPlay
+# PhairPlayPhone
 
-PhairPlay is a free, open-source, ad-free AirPlay 2 receiver for Android TV, Fire TV, and Android phones/tablets. It lets your macOS or iOS/iPadOS device mirror its screen and audio directly to the receiver — no Apple TV required.
+> **📱 THIS IS A PHONE-ONLY BUILD. I DO NOT CARE ABOUT TVs.**
+> **This fork targets Android phones/tablets exclusively. I make no effort to keep it
+> compatible with Android TV or Fire TV — TV support is explicitly out of scope.**
+> For the original TV-focused project, see [mazer666/PhairPlay](https://github.com/mazer666/PhairPlay).
+
+PhairPlayPhone is a free, open-source, ad-free AirPlay 2 receiver for **Android phones and tablets**. It lets your macOS or iOS/iPadOS device mirror its screen and audio directly to your phone — no Apple TV required.
 
 ```
  macOS (Monterey+)            Android TV / Fire TV
