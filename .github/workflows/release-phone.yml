@@ -4,9 +4,8 @@
 #   - Pushing a tag like v1.0.0-phone  → builds and attaches the APK to a release for that tag.
 #   - Manual "Run workflow" (workflow_dispatch) → builds and publishes under the tag you type.
 #
-# The APK is debug-signed (installable via `adb install`). To ship a release-signed
-# build instead, add KEYSTORE_* secrets and switch the assemble task to
-# assemblePhoneRelease with a signing step.
+# The APK is release-signed with the keystore stored in repo secrets
+# (KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD) and minified by R8.
 
 name: Release Phone APK
 
@@ -62,13 +61,23 @@ jobs:
             echo "name=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build phone debug APK
-        run: ./gradlew :app:assemblePhoneDebug --stacktrace
+      - name: Decode signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/phairplay-phone.jks"
+
+      - name: Build signed phone release APK
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/phairplay-phone.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew :app:assemblePhoneRelease --stacktrace
 
       - name: Stage & rename APK
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/phone/debug/app-phone-debug.apk \
+          cp app/build/outputs/apk/phone/release/app-phone-release.apk \
              "dist/PhairPlay-${{ steps.tag.outputs.name }}-phone.apk"
           ls -l dist/
 
@@ -84,7 +93,7 @@ jobs:
 
             - Installs as a normal Android phone / tablet app (Android 8+)
             - Launches in portrait; while mirroring it rotates to match the sending iPhone / Mac
-            - Debug-signed APK — install with:
+            - Release-signed, R8-minified APK — install with:
               ```
               adb install -r PhairPlay-${{ steps.tag.outputs.name }}-phone.apk
               ```
