@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone flavor manifest overrides.
+
+    The shared manifest locks MainActivity to landscape (TV). On a phone we want the
+    app to launch in portrait, so this flavor replaces the orientation with "portrait".
+    The window is therefore created portrait up-front (no landscape flash on launch).
+    A mirror still pins the orientation to its source at runtime via
+    setRequestedOrientation (a landscape iPhone mirror rotates the phone to landscape);
+    when the mirror ends the app returns to portrait.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait"
+            tools:replace="android:screenOrientation" />
+    </application>
+
+</manifest>

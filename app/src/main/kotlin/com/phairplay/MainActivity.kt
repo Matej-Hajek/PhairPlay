@@ -109,12 +109,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Phone flavor: allow the idle UI to rotate with the device (respecting the user's
-        // rotation lock). A mirror later pins the orientation to the source; on TV this stays
-        // landscape as declared in the manifest. Done before setContentView so the correct
-        // portrait/landscape layout is inflated up-front where possible.
+        // Phone flavor: the app launches in portrait (also declared in the phone manifest).
+        // A mirror later pins the orientation to its source (a landscape iPhone mirror rotates
+        // to landscape); on TV this stays landscape as declared in the shared manifest.
         if (followSourceOrientation) {
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
         lastConfigOrientation = resources.configuration.orientation
 
@@ -313,19 +312,20 @@ class MainActivity : AppCompatActivity() {
         streamingScreen.visibility = View.VISIBLE
         streamingContainer.visibility = View.GONE
 
-        // Phone flavor: the mirror ended — hand orientation back to the device so the idle
-        // UI can be portrait or landscape. onConfigurationChanged reloads the matching layout.
+        // Phone flavor: the mirror ended — return the idle UI to portrait (the app's default
+        // on a phone). onConfigurationChanged reloads the portrait layout if needed.
         if (followSourceOrientation) {
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }
 
     /**
-     * Phone flavor only: when the device is rotated while idle, reload the orientation-specific
-     * layout (portrait uses a top nav bar, landscape/TV a left rail). We keep orientation in
-     * configChanges so an active mirror is never torn down by a rotation, so we must swap the
-     * layout ourselves — but only when idle. During mirroring the full-screen overlay covers the
-     * nav UI and the session must be preserved, so we do not recreate.
+     * Phone flavor only: reload the orientation-specific layout when the effective orientation
+     * changes while idle — chiefly to restore the clean portrait layout after a landscape mirror
+     * ends. Orientation stays in configChanges so an active mirror is never torn down by a
+     * rotation, so we swap the layout ourselves — but only when idle. During mirroring the
+     * full-screen overlay covers the nav UI and the session must be preserved, so we do not
+     * recreate.
      */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
