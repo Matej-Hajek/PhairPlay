@@ -16,11 +16,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Phone-focused fork: only the phone flavor is linted.
         include:
-          - flavor: googletv
-            lint_task: :app:lintGoogletvDebug
-          - flavor: firetv
-            lint_task: :app:lintFiretvDebug
+          - flavor: phone
+            lint_task: :app:lintPhoneDebug
 
     steps:
       - name: Checkout code

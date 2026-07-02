@@ -43,15 +43,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Phone-focused fork: we only build and lint the phone flavor.
         include:
-          - flavor: googletv
-            lint_task: :app:lintGoogletvDebug
-            assemble_task: :app:assembleGoogletvDebug
-            apk_path: app/build/outputs/apk/googletv/debug/app-googletv-debug.apk
-          - flavor: firetv
-            lint_task: :app:lintFiretvDebug
-            assemble_task: :app:assembleFiretvDebug
-            apk_path: app/build/outputs/apk/firetv/debug/app-firetv-debug.apk
+          - flavor: phone
+            lint_task: :app:lintPhoneDebug
+            assemble_task: :app:assemblePhoneDebug
+            apk_path: app/build/outputs/apk/phone/debug/app-phone-debug.apk
 
     steps:
       - name: Checkout code

@@ -179,7 +179,13 @@ android {
             "UnusedResources",
             // Advisory: the project deliberately supports a wide API range for old TVs;
             // targetSdk is bumped deliberately, not on every new platform release.
-            "OldTargetApi"
+            "OldTargetApi",
+            // The phone flavor intentionally controls the Activity orientation:
+            // it launches in portrait and pins the orientation to the mirrored
+            // source (a portrait iPhone mirror shows portrait, a landscape one
+            // landscape). This is a deliberate product decision for a phone
+            // receiver, so setRequestedOrientation locking is expected here.
+            "SourceLockedOrientationActivity"
         )
     }
 
