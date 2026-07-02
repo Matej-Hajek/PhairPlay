@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -101,8 +102,22 @@ class MainActivity : AppCompatActivity() {
         resources.getBoolean(R.bool.follow_source_orientation)
     }
 
+    // Orientation the current layout was inflated for; used to reload the portrait/landscape
+    // layout when the phone is rotated while idle (see onConfigurationChanged).
+    private var lastConfigOrientation = Configuration.ORIENTATION_UNDEFINED
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Phone flavor: allow the idle UI to rotate with the device (respecting the user's
+        // rotation lock). A mirror later pins the orientation to the source; on TV this stays
+        // landscape as declared in the manifest. Done before setContentView so the correct
+        // portrait/landscape layout is inflated up-front where possible.
+        if (followSourceOrientation) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+        }
+        lastConfigOrientation = resources.configuration.orientation
+
         setContentView(R.layout.activity_main)
 
         Timber.d("MainActivity created")
@@ -298,10 +313,30 @@ class MainActivity : AppCompatActivity() {
         streamingScreen.visibility = View.VISIBLE
         streamingContainer.visibility = View.GONE
 
-        // Phone flavor: the mirror ended — return the app UI to its landscape default
-        // (activity_main is a landscape nav layout). No-op on TV flavors.
+        // Phone flavor: the mirror ended — hand orientation back to the device so the idle
+        // UI can be portrait or landscape. onConfigurationChanged reloads the matching layout.
         if (followSourceOrientation) {
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+        }
+    }
+
+    /**
+     * Phone flavor only: when the device is rotated while idle, reload the orientation-specific
+     * layout (portrait uses a top nav bar, landscape/TV a left rail). We keep orientation in
+     * configChanges so an active mirror is never torn down by a rotation, so we must swap the
+     * layout ourselves — but only when idle. During mirroring the full-screen overlay covers the
+     * nav UI and the session must be preserved, so we do not recreate.
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!followSourceOrientation) return
+        if (newConfig.orientation == lastConfigOrientation) return
+        lastConfigOrientation = newConfig.orientation
+        val idle = !::streamingContainer.isInitialized ||
+            streamingContainer.visibility != View.VISIBLE
+        if (idle) {
+            Timber.d("Rotation while idle — reloading layout for orientation ${newConfig.orientation}")
+            recreate()
         }
     }
 
